@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"math"
+	"strconv"
 	"strings"
 )
 
@@ -40,18 +41,21 @@ func isValidInput(input string) bool {
 func decode(encoded string) string {
 	minDigitSum := 9 * len(encoded) //possible max sum
 	result := ""
+	maxChar := countMaxChar(encoded)
+	maxRange := int(math.Pow10(len(encoded) + 1))
+	for i := 0; i < maxRange; i++ {
+		if !isMoreThanMax(maxChar, i) {
+			integerStr := fmt.Sprintf("%0*d", len(encoded)+1, i) // create integer with leading 0 ex.002550
+			// fmt.Println(integerStr)
+			digitSum := calculateDigitSum(integerStr)
+			encodedInteger := encode(integerStr, encoded)
 
-	for i := 0; i < int(math.Pow10(len(encoded)+1)); i++ {
-		integerStr := fmt.Sprintf("%0*d", len(encoded)+1, i) // create integer with leading 0 ex.002550
-		// fmt.Println(minDigitSum)
-		digitSum := calculateDigitSum(integerStr)
-		encodedInteger := encode(integerStr)
-
-		//compare input and new encoded
-		if encodedInteger == encoded {
-			if digitSum < minDigitSum {
-				minDigitSum = digitSum
-				result = integerStr
+			//compare input and new encoded
+			if encodedInteger == encoded {
+				if digitSum < minDigitSum {
+					minDigitSum = digitSum
+					result = integerStr
+				}
 			}
 		}
 	}
@@ -67,16 +71,42 @@ func calculateDigitSum(s string) int {
 	return sum
 }
 
-func encode(integer string) string {
-	encoded := ""
+func encode(integer, encoded string) string {
+	encoded2 := ""
 	for i := 0; i < len(integer)-1; i++ {
 		if integer[i] > integer[i+1] {
-			encoded += "L"
+			encoded2 += "L"
 		} else if integer[i] < integer[i+1] {
-			encoded += "R"
+			encoded2 += "R"
 		} else {
-			encoded += "="
+			encoded2 += "="
+		}
+		if encoded2[i] != encoded[i] {
+			return ""
 		}
 	}
-	return encoded
+	return encoded2
+}
+
+func countMaxChar(str string) int {
+	charCount := make(map[rune]int)
+	maxCount := 0
+	for _, char := range str {
+		charCount[char]++
+		if charCount[char] > maxCount {
+			maxCount = charCount[char]
+		}
+	}
+	return maxCount
+}
+
+func isMoreThanMax(number, target int) bool {
+	targetStr := strconv.Itoa(target)
+	for _, digit := range targetStr {
+		digitInt, _ := strconv.Atoi(string(digit))
+		if digitInt > number {
+			return true
+		}
+	}
+	return false
 }
